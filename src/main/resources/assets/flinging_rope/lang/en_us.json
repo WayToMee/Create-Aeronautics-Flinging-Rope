@@ -1,0 +1,12 @@
+{
+  "item.flinging_rope.rope_coil": "Rope Coil",
+  "item.flinging_rope.rope_coil.tooltip.throw": "Right-click to throw the knot; it hooks onto any surface",
+  "item.flinging_rope.rope_coil.tooltip.winch": "Sneak while holding the coil to winch yourself in",
+  "item.flinging_rope.rope_coil.tooltip.grab": "Other players can right-click the knot to grab the rope",
+  "entity.flinging_rope.rope_knot": "Rope Knot",
+  "message.flinging_rope.recalled": "Rope recalled",
+  "message.flinging_rope.released": "Rope released",
+  "message.flinging_rope.snapped": "The rope ran out!",
+  "message.flinging_rope.grabbed": "You grabbed the rope",
+  "message.flinging_rope.taken": "%s grabbed your rope"
+}

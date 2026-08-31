@@ -1,0 +1,12 @@
+{
+  "item.flinging_rope.rope_coil": "Моток верёвки",
+  "item.flinging_rope.rope_coil.tooltip.throw": "ПКМ — бросить узел; он цепляется за любую поверхность",
+  "item.flinging_rope.rope_coil.tooltip.winch": "Крадитесь с мотком в руке, чтобы подтянуть себя к узлу",
+  "item.flinging_rope.rope_coil.tooltip.grab": "Другие игроки могут схватить верёвку, кликнув ПКМ по узлу",
+  "entity.flinging_rope.rope_knot": "Узел верёвки",
+  "message.flinging_rope.recalled": "Верёвка смотана",
+  "message.flinging_rope.released": "Верёвка отпущена",
+  "message.flinging_rope.snapped": "Верёвка закончилась!",
+  "message.flinging_rope.grabbed": "Вы схватили верёвку",
+  "message.flinging_rope.taken": "%s перехватил вашу верёвку"
+}

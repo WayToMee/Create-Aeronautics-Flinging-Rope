@@ -1,0 +1,83 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.140'
+}
+
+version = project.mod_version
+group = project.mod_group_id
+
+base {
+    archivesName = "${mod_id}-${minecraft_version}"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+
+    // v2 dependencies (Create / Simulated / Sable) — uncomment when integrating:
+    // maven { url = "https://maven.ryanhcode.dev/releases" }   // Sable, Create: Simulated
+    // maven { url = "https://maven.createmod.net" }            // Create, Ponder, Flywheel
+    // maven { url = "https://mvn.devos.one/snapshots" }        // Registrate
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    parchment {
+        minecraftVersion = project.parchment_minecraft
+        mappingsVersion = project.parchment_version
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('runs/client')
+        }
+        server {
+            server()
+            gameDirectory = project.file('runs/server')
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    // v2: physics integration with Create: Aeronautics (Simulated + Sable).
+    // Published on the public maven — versions verified against
+    // https://maven.ryanhcode.dev/releases
+    // compileOnly("dev.simulated_team.simulated:simulated-neoforge-${minecraft_version}:${simulated_version}")
+    // compileOnly("dev.ryanhcode.sable:sable-neoforge-${minecraft_version}:${sable_version}") {
+    //     exclude group: "foundry.veil"
+    //     exclude group: "com.tterrag.registrate"
+    // }
+}
+
+processResources {
+    var expandProps = [
+            'version'                      : version,
+            'mod_id'                       : mod_id,
+            'mod_name'                     : mod_name,
+            'mod_author'                   : mod_author,
+            'description'                  : mod_description,
+            'license'                      : license,
+            'minecraft_version'            : minecraft_version,
+            'minecraft_version_range'      : minecraft_version_range,
+            'neoforge_version'             : neoforge_version,
+            'neoforge_loader_version_range': neoforge_loader_version_range,
+    ]
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand expandProps
+    }
+    inputs.properties(expandProps)
+}
