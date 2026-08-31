@@ -104,9 +104,11 @@ public class ClientFlungRope {
                         point.position().set(beforeBefore.position())
                                 .lerp(before.position(), 1.0 + fraction);
                     }
-                } else {
+                } else if (after != null) {
                     point.position().set(after.position());
                 }
+                // else: every snapshot matched gameTick exactly — position was
+                // already set inside the scan loop, nothing to interpolate.
             } else {
                 final double factor = (gameTick - before.interpolationTick())
                         / (after.interpolationTick() - before.interpolationTick());
