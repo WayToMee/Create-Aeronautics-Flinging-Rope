@@ -25,6 +25,7 @@ repositories {
     maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // ForgeConfigAPIPort
     maven { url = "https://maven.blamejared.com/" }          // misc transitives
     maven { url = "https://maven.theillusivec4.top/" }       // Curios (Simulated transitive)
+    maven { url = "https://maven.squiddev.cc" }              // CC: Tweaked (Simulated runtime transitive)
 
     exclusiveContent {
         forRepository {
