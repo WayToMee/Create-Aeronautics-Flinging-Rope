@@ -87,7 +87,7 @@ public class RopeKnotRenderer extends EntityRenderer<RopeKnotEntity> {
         final float xOffset;
         final float zOffset;
         if (horizontalSq > 1.0E-6f) {
-            final float inv = Mth.invSqrt(horizontalSq) * halfWidth;
+            final float inv = halfWidth / (float) Math.sqrt(horizontalSq);
             xOffset = dz * inv;
             zOffset = dx * inv;
         } else {
