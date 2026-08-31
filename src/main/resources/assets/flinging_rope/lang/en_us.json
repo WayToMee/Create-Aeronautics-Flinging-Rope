@@ -1,12 +1,6 @@
 {
   "item.flinging_rope.rope_coil": "Rope Coil",
-  "item.flinging_rope.rope_coil.tooltip.throw": "Right-click to throw the knot; it hooks onto any surface",
-  "item.flinging_rope.rope_coil.tooltip.winch": "Sneak while holding the coil to winch yourself in",
-  "item.flinging_rope.rope_coil.tooltip.grab": "Other players can right-click the knot to grab the rope",
-  "entity.flinging_rope.rope_knot": "Rope Knot",
-  "message.flinging_rope.recalled": "Rope recalled",
-  "message.flinging_rope.released": "Rope released",
-  "message.flinging_rope.snapped": "The rope ran out!",
-  "message.flinging_rope.grabbed": "You grabbed the rope",
-  "message.flinging_rope.taken": "%s grabbed your rope"
+  "item.flinging_rope.rope_coil.tooltip.fling": "Right-click to fling the rope out; right-click again to pay out more",
+  "item.flinging_rope.rope_coil.tooltip.wind": "Sneak + right-click to wind the rope back in (or pick a loose rope up)",
+  "item.flinging_rope.rope_coil.tooltip.grab": "Empty hand + sneak + right-click near the far end to grab on"
 }

@@ -18,10 +18,25 @@ java {
 repositories {
     mavenCentral()
 
-    // v2 dependencies (Create / Simulated / Sable) — uncomment when integrating:
-    // maven { url = "https://maven.ryanhcode.dev/releases" }   // Sable, Create: Simulated
-    // maven { url = "https://maven.createmod.net" }            // Create, Ponder, Flywheel
-    // maven { url = "https://mvn.devos.one/snapshots" }        // Registrate
+    maven { url = "https://maven.ryanhcode.dev/releases" }   // Sable, Create: Simulated
+    maven { url = "https://maven.ryanhcode.dev/snapshots" }  // Sable snapshots (transitives)
+    maven { url = "https://maven.createmod.net" }            // Create, Ponder, Flywheel, Catnip
+    maven { url = "https://mvn.devos.one/snapshots" }        // Registrate
+    maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // ForgeConfigAPIPort
+    maven { url = "https://maven.blamejared.com/" }          // misc transitives
+    maven { url = "https://maven.theillusivec4.top/" }       // Curios (Simulated transitive)
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 neoForge {
@@ -40,26 +55,35 @@ neoForge {
         server {
             server()
             gameDirectory = project.file('runs/server')
-            programArgument '--nogui'
         }
     }
 
     mods {
         "${mod_id}" {
-            sourceSet(sourceSets.main)
+            sourceSet sourceSets.main
         }
     }
 }
 
 dependencies {
-    // v2: physics integration with Create: Aeronautics (Simulated + Sable).
-    // Published on the public maven — versions verified against
-    // https://maven.ryanhcode.dev/releases
-    // compileOnly("dev.simulated_team.simulated:simulated-neoforge-${minecraft_version}:${simulated_version}")
-    // compileOnly("dev.ryanhcode.sable:sable-neoforge-${minecraft_version}:${sable_version}") {
-    //     exclude group: "foundry.veil"
-    //     exclude group: "com.tterrag.registrate"
-    // }
+    // The Aeronautics stack — hard dependencies, no fallbacks.
+    implementation("dev.simulated_team.simulated:simulated-neoforge-${minecraft_version}:${simulated_version}")
+
+    implementation("dev.ryanhcode.sable:sable-neoforge-${minecraft_version}:${sable_version}") {
+        exclude group: "foundry.veil"
+        exclude group: "com.tterrag.registrate"
+    }
+
+    implementation("com.simibubi.create:create-${minecraft_version}:${create_version}") { transitive = false }
+    implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
+    implementation("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
+    compileOnly("com.tterrag.registrate:Registrate:${registrate_version}")
+
+    // Veil — Simulated's networking/shader library, needed on the runtime classpath.
+    runtimeOnly("foundry.veil:veil-neoforge-${minecraft_version}:${veil_version}") {
+        exclude group: "maven.modrinth"
+    }
 }
 
 processResources {
