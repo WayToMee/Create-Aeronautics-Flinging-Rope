@@ -1,6 +1,0 @@
-{
-  "item.flinging_rope.rope_coil": "Rope Coil",
-  "item.flinging_rope.rope_coil.tooltip.fling": "Right-click to fling the rope out; right-click again to pay out more",
-  "item.flinging_rope.rope_coil.tooltip.wind": "Sneak + right-click to wind the rope back in (or pick a loose rope up)",
-  "item.flinging_rope.rope_coil.tooltip.grab": "Empty hand + sneak + right-click near the far end to grab on"
-}

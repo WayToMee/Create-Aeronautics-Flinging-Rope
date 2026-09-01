@@ -146,9 +146,9 @@ public class RopeCoilItem extends Item {
     @Override
     public void appendHoverText(final ItemStack stack, final TooltipContext context,
                                 final List<Component> tooltip, final TooltipFlag flag) {
-        tooltip.add(Component.translatable("item.flinging_rope.rope_coil.tooltip.fling"));
-        tooltip.add(Component.translatable("item.flinging_rope.rope_coil.tooltip.wind"));
-        tooltip.add(Component.translatable("item.flinging_rope.rope_coil.tooltip.grab"));
+        tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.fling"));
+        tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.wind"));
+        tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.grab"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

@@ -12,7 +12,7 @@ authors = "${mod_author}"
 description = '''${description}'''
 
 [[mixins]]
-config = "flinging_rope.mixins.json"
+config = "ropes.mixins.json"
 
 [[dependencies.${mod_id}]]
 modId = "neoforge"

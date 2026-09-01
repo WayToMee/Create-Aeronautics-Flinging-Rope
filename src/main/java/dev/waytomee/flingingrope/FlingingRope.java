@@ -21,7 +21,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 @Mod(FlingingRope.MOD_ID)
 public final class FlingingRope {
 
-    public static final String MOD_ID = "flinging_rope";
+    public static final String MOD_ID = "ropes";
 
     public FlingingRope(final IEventBus modEventBus) {
         FRItems.ITEMS.register(modEventBus);

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "flinging_rope:item/rope_coil"
+    "layer0": "ropes:item/rope_coil"
   }
 }

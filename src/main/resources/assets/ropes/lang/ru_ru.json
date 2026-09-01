@@ -1,0 +1,6 @@
+{
+  "item.ropes.rope_coil": "Моток верёвки",
+  "item.ropes.rope_coil.tooltip.fling": "ПКМ — метнуть верёвку; ещё ПКМ — размотать больше",
+  "item.ropes.rope_coil.tooltip.wind": "Шифт + ПКМ — смотать верёвку (или подобрать лежащую)",
+  "item.ropes.rope_coil.tooltip.grab": "Пустой рукой шифт + ПКМ у дальнего конца — схватиться"
+}
