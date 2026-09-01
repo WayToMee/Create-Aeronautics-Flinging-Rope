@@ -5,5 +5,6 @@
   "item.ropes.rope_coil.tooltip.release": "Шифт + ЛКМ — отпустить верёвку",
   "item.ropes.rope_coil.tooltip.grab": "Пустой рукой шифт + ПКМ у дальнего конца — схватиться",
   "item.ropes.hook": "Крюк",
-  "item.ropes.hook.tooltip.attach": "ПКМ у дальнего конца верёвки — надеть крюк"
+  "item.ropes.hook.tooltip.attach": "ПКМ у дальнего конца верёвки — надеть крюк",
+  "item.ropes.hook.tooltip.latch": "Надетый крюк цепляется за корабли при касании; схватить конец — снять крюк"
 }

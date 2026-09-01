@@ -17,8 +17,9 @@ import java.util.List;
 
 /**
  * A rope hook. Right-click near the loose far END of a flung rope to fit the hook onto it.
- * The fitted hook is returned as an item when the rope is fully wound in or despawns.
- * (Latching fitted hooks onto Aeronautics handles is the next step.)
+ * A fitted hook latches onto Aeronautics sub-levels (ships) it touches; grabbing the end
+ * (empty hand, sneak + right-click) pulls it off again. The fitted hook is returned as an
+ * item when the rope is fully wound in or despawns.
  */
 public class HookItem extends Item {
 
@@ -54,6 +55,7 @@ public class HookItem extends Item {
     public void appendHoverText(final ItemStack stack, final TooltipContext context,
                                 final List<Component> tooltip, final TooltipFlag flag) {
         tooltip.add(Component.translatable("item.ropes.hook.tooltip.attach"));
+        tooltip.add(Component.translatable("item.ropes.hook.tooltip.latch"));
         super.appendHoverText(stack, context, tooltip, flag);
     }
 }

@@ -5,5 +5,6 @@
   "item.ropes.rope_coil.tooltip.release": "Sneak + left-click to let the rope go",
   "item.ropes.rope_coil.tooltip.grab": "Empty hand + sneak + right-click near the far end to grab on",
   "item.ropes.hook": "Rope Hook",
-  "item.ropes.hook.tooltip.attach": "Right-click near a rope's far end to fit the hook onto it"
+  "item.ropes.hook.tooltip.attach": "Right-click near a rope's far end to fit the hook onto it",
+  "item.ropes.hook.tooltip.latch": "A fitted hook latches onto ships it touches; grab the end to pull it off"
 }

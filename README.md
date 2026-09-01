@@ -16,8 +16,9 @@ without the Aeronautics stack the mod does not load.
 
 ## What it does
 
-The rope is a *free* rope: it never hooks onto blocks. It flies, whips, falls and
-drapes over terrain under real rope physics.
+The rope is a *free* rope: it never hooks onto world blocks. It flies, whips, falls and
+drapes over terrain under real rope physics. A **rope hook** fitted onto the far end
+latches onto Aeronautics contraptions (Sable sub-levels — ships) on contact.
 
 | Action | Effect |
 |---|---|
@@ -26,9 +27,15 @@ drapes over terrain under real rope physics.
 | Sneak + right-click (coil in hand) | Wind the rope back in; fully wound = back in the coil |
 | Sneak + right-click near a loose rope start (coil in hand) | Pick a dropped rope back up |
 | Sneak + right-click, **empty hand**, near the far end | Grab on / let go (helicopter pickup) |
+| Right-click with a **rope hook** near a loose far end | Fit the hook onto the rope |
+| Fitted hook touches a ship | The hook latches on — the rope tows or hangs from the contraption |
+| Grab a latched end (empty hand, sneak + right-click) | Pull the hook off the ship |
 
 Letting go of the coil (or dying) drops the rope where it is — it keeps simulating and
-can be picked back up. Abandoned ropes despawn after two minutes.
+can be picked back up. A rope latched to a ship keeps hanging from it and never despawns;
+other abandoned ropes despawn after two minutes. If the ship is disassembled, the latch
+lets go and the rope falls free. Winding the rope fully in pops a fitted hook off as an
+item.
 
 ## Building
 

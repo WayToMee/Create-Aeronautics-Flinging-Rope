@@ -1,6 +1,9 @@
 package dev.waytomee.flingingrope.content.rope;
 
 import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.math.BoundingBox3d;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import dev.waytomee.flingingrope.index.FRItems;
 import dev.waytomee.flingingrope.network.ClientboundFlungRopeStopPacket;
@@ -30,7 +33,8 @@ import java.util.UUID;
 
 /**
  * Owns every {@link FlungRopeStrand} in a server level: adds them to Sable's physics system,
- * validates their holders, and re-applies hand attachments each physics tick.
+ * validates their holders, latches fitted hooks onto sub-levels (ships) and re-applies hand
+ * attachments each physics tick.
  * Pattern adapted from Create: Simulated's {@code ServerLevelRopeManager} (MIT).
  */
 public class FlungRopeServerManager {
@@ -38,6 +42,10 @@ public class FlungRopeServerManager {
     /** Free ropes despawn after two minutes. */
     private static final int FREE_DESPAWN_TICKS = 2 * 60 * 20;
     private static final double GRAB_RANGE = 3.0;
+    /** How close the hooked END must get to a ship block to latch on. */
+    private static final double LATCH_RANGE = 0.75;
+    /** Re-latch delay after the hook is pulled off a ship. */
+    private static final int LATCH_COOLDOWN_TICKS = 40;
 
     private static final WorldAttached<FlungRopeServerManager> MANAGERS =
             new WorldAttached<>(FlungRopeServerManager::create);
@@ -106,7 +114,8 @@ public class FlungRopeServerManager {
      */
     public FlungRopeStrand rebuildStrand(final FlungRopeStrand old,
                                          @Nullable final UUID holder,
-                                         @Nullable final UUID endHolder) {
+                                         @Nullable final UUID endHolder,
+                                         final boolean keepLatch) {
         final SubLevelPhysicsSystem system = this.physicsSystem();
 
         if (old.isActive()) {
@@ -125,13 +134,18 @@ public class FlungRopeServerManager {
         fresh.setEndHolder(endHolder);
         fresh.setEndHook(old.hasEndHook());
         fresh.networkingStopped = old.networkingStopped;
+        fresh.latchCooldown = old.latchCooldown;
+        if (keepLatch && old.isLatched()) {
+            fresh.latch(old.getLatchedSubLevelId(), old.getLatchLocalPos());
+        }
         this.strands.put(fresh.getUUID(), fresh);
         return fresh;
     }
 
     /**
      * Called once per game tick: validates holders, feeds strands into the physics system,
-     * pulls END grabbers along (helicopter pickup) and despawns abandoned ropes.
+     * pulls END grabbers along (helicopter pickup), latches fitted hooks onto ships and
+     * despawns abandoned ropes.
      */
     public void gameTick() {
         final SubLevelPhysicsSystem system = this.physicsSystem();
@@ -140,7 +154,23 @@ public class FlungRopeServerManager {
         for (final FlungRopeStrand strand : new ArrayList<>(this.strands.values())) {
             this.validateHolders(strand);
 
-            if (strand.isFree() && ++strand.freeTicks > FREE_DESPAWN_TICKS) {
+            // a rebuild inside validateHolders replaces the map entry — pick the
+            // replacement up on the next tick instead of re-adding the stale object
+            if (this.strands.get(strand.getUUID()) != strand) {
+                continue;
+            }
+
+            if (strand.latchCooldown > 0) {
+                strand.latchCooldown--;
+            }
+
+            if (strand.isLatched() && !this.isLatchTargetAlive(strand)) {
+                // the ship is gone — drop the latch (attachments can only be cleared by rebuild)
+                this.rebuildStrand(strand, strand.getHolder(), strand.getEndHolder(), false);
+                continue;
+            }
+
+            if (strand.isFree() && !strand.isLatched() && ++strand.freeTicks > FREE_DESPAWN_TICKS) {
                 this.removeStrand(strand);
                 continue;
             }
@@ -154,6 +184,7 @@ public class FlungRopeServerManager {
             if (strand.isActive()) {
                 strand.updatePose();
                 this.towEndHolder(strand);
+                this.tryLatch(strand);
             }
         }
     }
@@ -176,6 +207,64 @@ public class FlungRopeServerManager {
         }
     }
 
+    private boolean isLatchTargetAlive(final FlungRopeStrand strand) {
+        final var container = SubLevelContainer.getContainer(this.level);
+        if (container == null) return false;
+
+        final SubLevel subLevel = container.getSubLevel(strand.getLatchedSubLevelId());
+        return subLevel != null && !subLevel.isRemoved();
+    }
+
+    /**
+     * Latches a fitted hook onto the first sub-level (ship) whose blocks the rope's END is
+     * touching: the END position is transformed into the ship's local plot space (the plot
+     * lives in the far plotyard region of the same level, so its local coordinates are real
+     * level coordinates) and checked against nearby blocks.
+     */
+    private void tryLatch(final FlungRopeStrand strand) {
+        if (!strand.hasEndHook() || strand.isLatched()
+                || strand.getEndHolder() != null || strand.latchCooldown > 0) {
+            return;
+        }
+        if (strand.getPoints().isEmpty()) {
+            return;
+        }
+
+        final var container = SubLevelContainer.getContainer(this.level);
+        if (container == null) return;
+
+        final Vector3d end = strand.getPoints().getLast();
+        final BoundingBox3d query = new BoundingBox3d(
+                end.x - LATCH_RANGE, end.y - LATCH_RANGE, end.z - LATCH_RANGE,
+                end.x + LATCH_RANGE, end.y + LATCH_RANGE, end.z + LATCH_RANGE);
+
+        for (final SubLevel subLevel : container.queryIntersecting(query)) {
+            if (subLevel.isRemoved() || !(subLevel instanceof ServerSubLevel)) continue;
+
+            final Vector3d local = subLevel.logicalPose()
+                    .transformPositionInverse(end, new Vector3d());
+            if (!this.touchesSubLevelBlock(local)) continue;
+
+            strand.latch(subLevel.getUniqueId(), local);
+            strand.freeTicks = 0;
+            strand.forceResync();
+            strand.wakeUp();
+            this.level.playSound(null, end.x, end.y, end.z,
+                    SoundEvents.LEASH_KNOT_PLACE, SoundSource.PLAYERS, 0.8f, 1.5f);
+            return;
+        }
+    }
+
+    private boolean touchesSubLevelBlock(final Vector3d local) {
+        final BlockPos center = BlockPos.containing(local.x, local.y, local.z);
+        for (final BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 1, 1))) {
+            if (!this.level.getBlockState(pos).isAir()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * The rope stays tied to its holder through item switches — letting go is explicit
      * (sneak + left-click with the coil, {@link #releaseHeldStrand}). Only death or
@@ -187,7 +276,7 @@ public class FlungRopeServerManager {
             final Player holder = this.level.getPlayerByUUID(holderId);
             if (holder == null || !holder.isAlive()) {
                 // the holder is gone — the rope keeps flying free under physics
-                this.rebuildStrand(strand, null, strand.getEndHolder());
+                this.rebuildStrand(strand, null, strand.getEndHolder(), true);
                 return;
             }
         }
@@ -198,7 +287,7 @@ public class FlungRopeServerManager {
             final boolean tooFar = grabber != null && this.distanceToEnd(strand, grabber) >
                     strand.getPoints().size() * FlungRopeStrand.SEGMENT_LENGTH + 8.0;
             if (grabber == null || !grabber.isAlive() || tooFar) {
-                this.rebuildStrand(strand, strand.getHolder(), null);
+                this.rebuildStrand(strand, strand.getHolder(), null, true);
             }
         }
     }
@@ -234,6 +323,7 @@ public class FlungRopeServerManager {
 
     /**
      * Explicitly lets go of the held rope (sneak + left-click with the coil in hand).
+     * A latched hook stays latched — the rope keeps hanging from the ship.
      */
     public boolean releaseHeldStrand(final ServerPlayer player) {
         final FlungRopeStrand held = this.getByHolder(player.getUUID());
@@ -241,7 +331,7 @@ public class FlungRopeServerManager {
             return false;
         }
 
-        this.rebuildStrand(held, null, held.getEndHolder());
+        this.rebuildStrand(held, null, held.getEndHolder(), true);
         this.playRopeSound(player, 0.7f);
         return true;
     }
@@ -278,13 +368,14 @@ public class FlungRopeServerManager {
     }
 
     /**
-     * Toggles the END grab for a player with an empty hand.
+     * Toggles the END grab for a player with an empty hand. Grabbing a latched end pulls
+     * the hook off the ship (with a short re-latch cooldown).
      */
     public void toggleEndGrab(final ServerPlayer player) {
         // already grabbing something -> let go
         for (final FlungRopeStrand strand : this.strands.values()) {
             if (player.getUUID().equals(strand.getEndHolder())) {
-                this.rebuildStrand(strand, strand.getHolder(), null);
+                this.rebuildStrand(strand, strand.getHolder(), null, true);
                 this.playRopeSound(player, 0.8f);
                 return;
             }
@@ -308,9 +399,14 @@ public class FlungRopeServerManager {
         }
 
         if (best != null) {
-            best.setEndHolder(player.getUUID());
-            best.freeTicks = 0;
-            best.wakeUp();
+            FlungRopeStrand target = best;
+            if (best.isLatched()) {
+                target = this.rebuildStrand(best, best.getHolder(), null, false);
+                target.latchCooldown = LATCH_COOLDOWN_TICKS;
+            }
+            target.setEndHolder(player.getUUID());
+            target.freeTicks = 0;
+            target.wakeUp();
             this.playRopeSound(player, 1.1f);
         }
     }
@@ -339,7 +435,7 @@ public class FlungRopeServerManager {
             return null;
         }
 
-        final FlungRopeStrand picked = this.rebuildStrand(best, player.getUUID(), best.getEndHolder());
+        final FlungRopeStrand picked = this.rebuildStrand(best, player.getUUID(), best.getEndHolder(), true);
         picked.freeTicks = 0;
         this.playRopeSound(player, 1.0f);
         return picked;

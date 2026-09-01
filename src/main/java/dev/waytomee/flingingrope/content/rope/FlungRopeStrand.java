@@ -2,6 +2,9 @@ package dev.waytomee.flingingrope.content.rope;
 
 import dev.ryanhcode.sable.api.physics.object.rope.RopeHandle;
 import dev.ryanhcode.sable.api.physics.object.rope.RopePhysicsObject;
+import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.system.ticket.PhysicsChunkTicketManager;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.core.BlockPos;
@@ -23,7 +26,9 @@ import java.util.UUID;
  *
  * Unlike Simulated's block-anchored strands, a flung rope is anchored to a *player's hand*
  * (the START attachment is re-applied every physics tick), and the END is either free,
- * grabbed by another player, or carries a fitted hook. It never attaches to blocks.
+ * grabbed by another player, or carries a fitted hook. A fitted hook latches onto
+ * Aeronautics sub-levels (ships) it touches — the only thing the rope ever attaches to
+ * besides hands. It never attaches to world blocks.
  */
 public class FlungRopeStrand extends RopePhysicsObject {
 
@@ -51,6 +56,24 @@ public class FlungRopeStrand extends RopePhysicsObject {
      * Whether a hook item is fitted onto the far END of this rope.
      */
     private boolean endHook;
+
+    /**
+     * The sub-level (ship) the fitted hook is latched onto, if any.
+     */
+    @Nullable
+    private UUID latchedSubLevelId;
+
+    /**
+     * The latch point in the sub-level's local (plot) coordinates — the space Sable
+     * expects for attachments that ride on a sub-level.
+     */
+    @Nullable
+    private Vector3d latchLocalPos;
+
+    /**
+     * Game ticks left before the hook may latch again after being pulled off.
+     */
+    public int latchCooldown;
 
     /**
      * Game ticks this strand has spent with no holder at all.
@@ -95,13 +118,37 @@ public class FlungRopeStrand extends RopePhysicsObject {
         this.endHook = endHook;
     }
 
+    public boolean isLatched() {
+        return this.latchedSubLevelId != null;
+    }
+
+    @Nullable
+    public UUID getLatchedSubLevelId() {
+        return this.latchedSubLevelId;
+    }
+
+    @Nullable
+    public Vector3d getLatchLocalPos() {
+        return this.latchLocalPos;
+    }
+
+    /**
+     * Latches the fitted hook onto a sub-level. The physics attachment is (re-)applied on
+     * every physics tick while the latch holds; dropping the latch means rebuilding the
+     * strand, since Sable attachments cannot be cleared.
+     */
+    public void latch(final UUID subLevelId, final Vector3d localPos) {
+        this.latchedSubLevelId = subLevelId;
+        this.latchLocalPos = new Vector3d(localPos);
+    }
+
     public boolean isFree() {
         return this.holder == null && this.endHolder == null;
     }
 
     /**
-     * Re-applies the hand attachments. Called on every physics tick (multiple per game tick),
-     * mirroring how Simulated's winch keeps its attachment point current.
+     * Re-applies the hand and latch attachments. Called on every physics tick (multiple per
+     * game tick), mirroring how Simulated's winch keeps its attachment point current.
      */
     public void prePhysicsTick(final ServerLevel level) {
         if (this.holder != null) {
@@ -115,6 +162,16 @@ public class FlungRopeStrand extends RopePhysicsObject {
             final Player player = level.getPlayerByUUID(this.endHolder);
             if (player != null) {
                 this.setAttachment(RopeHandle.AttachmentPoint.END, handPos(player), null);
+            }
+        }
+
+        if (this.latchedSubLevelId != null && this.latchLocalPos != null) {
+            final var container = SubLevelContainer.getContainer(level);
+            if (container != null) {
+                final SubLevel subLevel = container.getSubLevel(this.latchedSubLevelId);
+                if (subLevel instanceof final ServerSubLevel serverSubLevel && !serverSubLevel.isRemoved()) {
+                    this.setAttachment(RopeHandle.AttachmentPoint.END, this.latchLocalPos, serverSubLevel);
+                }
             }
         }
     }
