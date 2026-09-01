@@ -65,6 +65,7 @@ public class FlungRopeTrackingPlugin implements SubLevelTrackingPlugin {
                 final ClientboundFlungRopeDataPacket packet = new ClientboundFlungRopeDataPacket(
                         interpolationTick,
                         strand.getUUID(),
+                        strand.hasEndHook(),
                         new ObjectArrayList<>(strand.getPoints())
                 );
 
