@@ -17,7 +17,7 @@ import java.util.UUID;
  * Rope pose snapshot for one flung rope. Mirrors Simulated's ClientboundRopeDataPacket,
  * carried over vanilla NeoForge networking instead of Veil.
  */
-public record ClientboundFlungRopeDataPacket(int interpolationTick, UUID uuid,
+public record ClientboundFlungRopeDataPacket(int interpolationTick, UUID uuid, boolean endHook,
                                              List<Vector3d> points) implements CustomPacketPayload {
 
     public static final Type<ClientboundFlungRopeDataPacket> TYPE =
@@ -29,6 +29,7 @@ public record ClientboundFlungRopeDataPacket(int interpolationTick, UUID uuid,
     private static ClientboundFlungRopeDataPacket read(final RegistryFriendlyByteBuf buf) {
         final int interpolationTick = buf.readInt();
         final UUID uuid = buf.readUUID();
+        final boolean endHook = buf.readBoolean();
 
         final int size = buf.readInt();
         final List<Vector3d> points = new ObjectArrayList<>(size);
@@ -36,12 +37,13 @@ public record ClientboundFlungRopeDataPacket(int interpolationTick, UUID uuid,
             points.add(SableBufferUtils.read(buf, new Vector3d()));
         }
 
-        return new ClientboundFlungRopeDataPacket(interpolationTick, uuid, points);
+        return new ClientboundFlungRopeDataPacket(interpolationTick, uuid, endHook, points);
     }
 
     private void write(final RegistryFriendlyByteBuf buf) {
         buf.writeInt(this.interpolationTick);
         buf.writeUUID(this.uuid);
+        buf.writeBoolean(this.endHook);
 
         buf.writeInt(this.points.size());
         for (final Vector3dc point : this.points) {

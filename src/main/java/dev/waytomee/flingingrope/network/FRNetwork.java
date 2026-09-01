@@ -17,7 +17,7 @@ public final class FRNetwork {
 
     @SubscribeEvent
     public static void register(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar("1");
+        final PayloadRegistrar registrar = event.registrar("2");
 
         registrar.playToClient(
                 ClientboundFlungRopeDataPacket.TYPE,
@@ -40,6 +40,19 @@ public final class FRNetwork {
                                 FlungRopeServerManager.get(serverPlayer.serverLevel());
                         if (manager != null) {
                             manager.toggleEndGrab(serverPlayer);
+                        }
+                    }
+                }));
+
+        registrar.playToServer(
+                ServerboundReleaseRopePacket.TYPE,
+                ServerboundReleaseRopePacket.STREAM_CODEC,
+                (packet, context) -> context.enqueueWork(() -> {
+                    if (context.player() instanceof final ServerPlayer serverPlayer) {
+                        final FlungRopeServerManager manager =
+                                FlungRopeServerManager.get(serverPlayer.serverLevel());
+                        if (manager != null) {
+                            manager.releaseHeldStrand(serverPlayer);
                         }
                     }
                 }));

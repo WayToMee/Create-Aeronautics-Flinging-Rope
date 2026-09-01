@@ -6,11 +6,14 @@ import dev.waytomee.flingingrope.content.rope.FlungRopeServerManager;
 import dev.waytomee.flingingrope.content.rope.FlungRopeTrackingPlugin;
 import dev.waytomee.flingingrope.index.FRItems;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 /**
@@ -51,11 +54,36 @@ public final class FlingingRope {
                 }
             }
         });
+
+        // Explicit release: sneak + left-click with the rope coil in hand. The rope no
+        // longer lets go when the coil merely leaves the hand — see also the client-side
+        // LeftClickEmpty handler in FlingingRopeClient (release packet for clicks on air).
+        NeoForge.EVENT_BUS.addListener((final PlayerInteractEvent.LeftClickBlock event) -> {
+            if (event.getEntity() instanceof final ServerPlayer serverPlayer && tryRelease(serverPlayer)) {
+                event.setCanceled(true);
+            }
+        });
+
+        NeoForge.EVENT_BUS.addListener((final AttackEntityEvent event) -> {
+            if (event.getEntity() instanceof final ServerPlayer serverPlayer && tryRelease(serverPlayer)) {
+                event.setCanceled(true);
+            }
+        });
+    }
+
+    private static boolean tryRelease(final ServerPlayer player) {
+        if (!player.isShiftKeyDown() || !FlungRopeServerManager.isHoldingCoil(player)) {
+            return false;
+        }
+
+        final FlungRopeServerManager manager = FlungRopeServerManager.get(player.serverLevel());
+        return manager != null && manager.releaseHeldStrand(player);
     }
 
     private void addCreative(final BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(FRItems.ROPE_COIL);
+            event.accept(FRItems.HOOK);
         }
     }
 }

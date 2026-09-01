@@ -22,8 +22,8 @@ import java.util.UUID;
  * strand pattern of Create: Simulated's {@code ServerRopeStrand} (MIT).
  *
  * Unlike Simulated's block-anchored strands, a flung rope is anchored to a *player's hand*
- * (the START attachment is re-applied every physics tick), and the END is either free or
- * grabbed by another player. It never attaches to blocks.
+ * (the START attachment is re-applied every physics tick), and the END is either free,
+ * grabbed by another player, or carries a fitted hook. It never attaches to blocks.
  */
 public class FlungRopeStrand extends RopePhysicsObject {
 
@@ -46,6 +46,11 @@ public class FlungRopeStrand extends RopePhysicsObject {
      */
     @Nullable
     private UUID endHolder;
+
+    /**
+     * Whether a hook item is fitted onto the far END of this rope.
+     */
+    private boolean endHook;
 
     /**
      * Game ticks this strand has spent with no holder at all.
@@ -80,6 +85,14 @@ public class FlungRopeStrand extends RopePhysicsObject {
 
     public void setEndHolder(@Nullable final UUID endHolder) {
         this.endHolder = endHolder;
+    }
+
+    public boolean hasEndHook() {
+        return this.endHook;
+    }
+
+    public void setEndHook(final boolean endHook) {
+        this.endHook = endHook;
     }
 
     public boolean isFree() {
@@ -142,6 +155,14 @@ public class FlungRopeStrand extends RopePhysicsObject {
         }
 
         return false;
+    }
+
+    /**
+     * Forces the next tracking pass to re-send this strand even if no point has moved —
+     * used when a state flag (like the fitted hook) changes while the rope is at rest.
+     */
+    public void forceResync() {
+        this.lastNetworkedPoints.clear();
     }
 
     public void justSynced() {

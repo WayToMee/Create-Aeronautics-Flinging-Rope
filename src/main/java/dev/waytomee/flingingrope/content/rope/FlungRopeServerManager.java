@@ -12,7 +12,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -77,7 +79,8 @@ public class FlungRopeServerManager {
     }
 
     /**
-     * Removes a strand entirely (wound back into the coil, or despawned).
+     * Removes a strand entirely (wound back into the coil, or despawned). A fitted hook
+     * pops off and drops as an item at the rope's end.
      */
     public void removeStrand(final FlungRopeStrand strand) {
         final SubLevelPhysicsSystem system = this.physicsSystem();
@@ -85,6 +88,12 @@ public class FlungRopeServerManager {
             system.removeObject(strand);
         }
         this.strands.remove(strand.getUUID());
+
+        if (strand.hasEndHook() && !strand.getPoints().isEmpty()) {
+            final Vector3d end = strand.getPoints().getLast();
+            this.level.addFreshEntity(new ItemEntity(this.level, end.x, end.y, end.z,
+                    new ItemStack(FRItems.HOOK.get())));
+        }
 
         PacketDistributor.sendToPlayersTrackingChunk(this.level, this.chunkOf(strand),
                 new ClientboundFlungRopeStopPacket(strand.getUUID(), true));
@@ -114,6 +123,7 @@ public class FlungRopeServerManager {
 
         final FlungRopeStrand fresh = new FlungRopeStrand(old.getUUID(), points, holder);
         fresh.setEndHolder(endHolder);
+        fresh.setEndHook(old.hasEndHook());
         fresh.networkingStopped = old.networkingStopped;
         this.strands.put(fresh.getUUID(), fresh);
         return fresh;
@@ -166,12 +176,17 @@ public class FlungRopeServerManager {
         }
     }
 
+    /**
+     * The rope stays tied to its holder through item switches — letting go is explicit
+     * (sneak + left-click with the coil, {@link #releaseHeldStrand}). Only death or
+     * disconnect releases it here.
+     */
     private void validateHolders(final FlungRopeStrand strand) {
         final UUID holderId = strand.getHolder();
         if (holderId != null) {
             final Player holder = this.level.getPlayerByUUID(holderId);
-            if (holder == null || !holder.isAlive() || !isHoldingCoil(holder)) {
-                // the rope is let go — it keeps flying free under physics
+            if (holder == null || !holder.isAlive()) {
+                // the holder is gone — the rope keeps flying free under physics
                 this.rebuildStrand(strand, null, strand.getEndHolder());
                 return;
             }
@@ -215,6 +230,51 @@ public class FlungRopeServerManager {
             grabber.fallDistance = 0.0f;
             grabber.hurtMarked = true;
         }
+    }
+
+    /**
+     * Explicitly lets go of the held rope (sneak + left-click with the coil in hand).
+     */
+    public boolean releaseHeldStrand(final ServerPlayer player) {
+        final FlungRopeStrand held = this.getByHolder(player.getUUID());
+        if (held == null) {
+            return false;
+        }
+
+        this.rebuildStrand(held, null, held.getEndHolder());
+        this.playRopeSound(player, 0.7f);
+        return true;
+    }
+
+    /**
+     * Fits a hook onto the loose far END of the nearest rope (right-click with a hook item).
+     */
+    public boolean tryAttachHook(final ServerPlayer player) {
+        final Vector3d hand = FlungRopeStrand.handPos(player);
+        FlungRopeStrand best = null;
+        double bestDistance = GRAB_RANGE;
+
+        for (final FlungRopeStrand strand : this.strands.values()) {
+            if (strand.hasEndHook()) continue;
+            if (strand.getEndHolder() != null) continue;
+            if (strand.getPoints().isEmpty()) continue;
+
+            final double distance = strand.getPoints().getLast().distance(hand);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = strand;
+            }
+        }
+
+        if (best == null) {
+            return false;
+        }
+
+        best.setEndHook(true);
+        best.forceResync();
+        best.wakeUp();
+        this.playRopeSound(player, 1.3f);
+        return true;
     }
 
     /**

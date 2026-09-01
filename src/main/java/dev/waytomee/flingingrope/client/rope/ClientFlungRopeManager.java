@@ -24,6 +24,7 @@ public final class ClientFlungRopeManager {
 
     public static void handleData(final ClientboundFlungRopeDataPacket packet) {
         final ClientFlungRope rope = ROPES.computeIfAbsent(packet.uuid(), ClientFlungRope::new);
+        rope.setEndHook(packet.endHook());
         rope.receive(packet.interpolationTick(), packet.points());
     }
 

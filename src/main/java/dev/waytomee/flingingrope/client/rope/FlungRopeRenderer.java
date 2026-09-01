@@ -28,6 +28,7 @@ import java.util.List;
  * {@code simulated:block/rope/rope} and {@code simulated:block/rope/knot} partial
  * models — using the segment/orientation math of Simulated's RopeStrandRenderer (MIT).
  * Rendering is camera-relative since flung ropes have no owning block entity.
+ * A fitted hook is drawn as an enlarged knot on the far end.
  */
 public final class FlungRopeRenderer {
 
@@ -88,6 +89,22 @@ public final class FlungRopeRenderer {
                 ps.scale(1.0f, (float) length, 1.0f);
 
                 middle.light(worldLight)
+                        .renderInto(ps, vb);
+                ps.popPose();
+            }
+
+            if (rope.hasEndHook()) {
+                final RopeRenderPoint last = renderPoints.getLast();
+                final Vector3d endPos = last.position();
+
+                ps.pushPose();
+                ps.translate(endPos.x - cameraPos.x, endPos.y - cameraPos.y, endPos.z - cameraPos.z);
+                ps.mulPose(last.orientation());
+                ps.scale(1.8f, 1.8f, 1.8f);
+                ps.translate(-0.5, -0.5, -0.5);
+
+                final BlockPos hookPos = BlockPos.containing(endPos.x, endPos.y, endPos.z);
+                knot.light(LevelRenderer.getLightColor(level, hookPos))
                         .renderInto(ps, vb);
                 ps.popPose();
             }

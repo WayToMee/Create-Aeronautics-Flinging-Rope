@@ -2,5 +2,8 @@
   "item.ropes.rope_coil": "Rope Coil",
   "item.ropes.rope_coil.tooltip.fling": "Right-click to fling the rope out; right-click again to pay out more",
   "item.ropes.rope_coil.tooltip.wind": "Sneak + right-click to wind the rope back in (or pick a loose rope up)",
-  "item.ropes.rope_coil.tooltip.grab": "Empty hand + sneak + right-click near the far end to grab on"
+  "item.ropes.rope_coil.tooltip.release": "Sneak + left-click to let the rope go",
+  "item.ropes.rope_coil.tooltip.grab": "Empty hand + sneak + right-click near the far end to grab on",
+  "item.ropes.hook": "Rope Hook",
+  "item.ropes.hook.tooltip.attach": "Right-click near a rope's far end to fit the hook onto it"
 }

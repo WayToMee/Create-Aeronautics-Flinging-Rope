@@ -28,6 +28,7 @@ import java.util.UUID;
  *
  *  - right-click                 -> fling the rope out ahead of you (or pay out more rope)
  *  - sneak + right-click         -> winch the rope back in (fully wound = gone)
+ *  - sneak + left-click          -> let the rope go (the only way to release it by hand)
  *  - sneak + right-click (near a loose rope start, no rope held) -> pick the rope back up
  *  - another player, empty hand, sneak + right-click near the far end -> grab on (helicopter pickup)
  */
@@ -148,6 +149,7 @@ public class RopeCoilItem extends Item {
                                 final List<Component> tooltip, final TooltipFlag flag) {
         tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.fling"));
         tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.wind"));
+        tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.release"));
         tooltip.add(Component.translatable("item.ropes.rope_coil.tooltip.grab"));
         super.appendHoverText(stack, context, tooltip, flag);
     }

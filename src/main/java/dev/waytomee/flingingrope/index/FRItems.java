@@ -1,6 +1,7 @@
 package dev.waytomee.flingingrope.index;
 
 import dev.waytomee.flingingrope.FlingingRope;
+import dev.waytomee.flingingrope.content.HookItem;
 import dev.waytomee.flingingrope.content.RopeCoilItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -14,6 +15,11 @@ public final class FRItems {
             "rope_coil",
             RopeCoilItem::new,
             new Item.Properties().stacksTo(1));
+
+    public static final DeferredItem<HookItem> HOOK = ITEMS.registerItem(
+            "hook",
+            HookItem::new,
+            new Item.Properties().stacksTo(16));
 
     private FRItems() {
     }

@@ -4,7 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.waytomee.flingingrope.FlingingRope;
 import dev.waytomee.flingingrope.client.rope.ClientFlungRopeManager;
 import dev.waytomee.flingingrope.client.rope.FlungRopeRenderer;
+import dev.waytomee.flingingrope.content.rope.FlungRopeServerManager;
 import dev.waytomee.flingingrope.network.ServerboundGrabRopePacket;
+import dev.waytomee.flingingrope.network.ServerboundReleaseRopePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.player.Player;
@@ -43,6 +45,19 @@ public final class FlingingRopeClient {
         final Player player = event.getEntity();
         if (player.isShiftKeyDown() && player.getMainHandItem().isEmpty()) {
             PacketDistributor.sendToServer(ServerboundGrabRopePacket.INSTANCE);
+        }
+    }
+
+    /**
+     * Left-clicking air fires no server event, so the explicit rope release
+     * (sneak + left-click with the coil) is relayed with a packet. Clicks on
+     * blocks/entities are handled server-side in {@code FlingingRope}.
+     */
+    @SubscribeEvent
+    public static void onLeftClickEmpty(final PlayerInteractEvent.LeftClickEmpty event) {
+        final Player player = event.getEntity();
+        if (player.isShiftKeyDown() && FlungRopeServerManager.isHoldingCoil(player)) {
+            PacketDistributor.sendToServer(ServerboundReleaseRopePacket.INSTANCE);
         }
     }
 

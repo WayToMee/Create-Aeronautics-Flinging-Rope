@@ -18,6 +18,7 @@ public class ClientFlungRope {
     private final UUID uuid;
     private final ObjectArrayList<ClientFlungRopePoint> points = new ObjectArrayList<>();
     private boolean stopped;
+    private boolean endHook;
 
     public ClientFlungRope(final UUID uuid) {
         this.uuid = uuid;
@@ -33,6 +34,14 @@ public class ClientFlungRope {
 
     public void setStopped(final boolean stopped) {
         this.stopped = stopped;
+    }
+
+    public boolean hasEndHook() {
+        return this.endHook;
+    }
+
+    public void setEndHook(final boolean endHook) {
+        this.endHook = endHook;
     }
 
     public void receive(final int interpolationTick, final List<Vector3d> incomingPoints) {
